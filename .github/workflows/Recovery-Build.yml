@@ -144,10 +144,18 @@ jobs:
         if-no-files-found: warn
         retention-days: 14
 
+    - name: Upload Recovery Image Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: vendor_boot-${{ github.run_id }}
+        path: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/vendor_boot.img
+        if-no-files-found: warn
+        retention-days: 14
+
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
-        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
+        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/vendor_boot.img
         name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
         tag_name: ${{ github.run_id }}
         body: |
