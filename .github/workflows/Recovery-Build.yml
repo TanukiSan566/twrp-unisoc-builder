@@ -122,6 +122,39 @@ jobs:
         git clone ${{ github.event.inputs.COMMON_TREE_URL }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.COMMON_PATH }}
       working-directory: ${{ steps.pwd.outputs.workspace-folder }}
 
+    - name: Apply Unisoc TWRP Source Patch
+      run: |
+        echo "==== 开始拉取展锐显示修复补丁 ===="
+        git clone https://github.com/rtyutechstudio/unisoc-twrp-sourcecode_patch.git patch_temp
+        
+        # 兼容性文件匹配与替换逻辑
+        if [ -f patch_temp/graphics_drm.cpp ]; then
+          echo "在根目录下找到 graphics_drm.cpp，正在替换..."
+          cp -f patch_temp/graphics_drm.cpp bootable/recovery/minuitwrp/graphics_drm.cpp
+        elif [ -f patch_temp/minuitwrp/graphics_drm.cpp ]; then
+          echo "在子目录下找到 graphics_drm.cpp，正在替换..."
+          cp -f patch_temp/minuitwrp/graphics_drm.cpp bootable/recovery/minuitwrp/graphics_drm.cpp
+        elif [ -f patch_temp/bootable/recovery/minuitwrp/graphics_drm.cpp ]; then
+          echo "在完整路径下找到 graphics_drm.cpp，正在替换..."
+          cp -f patch_temp/bootable/recovery/minuitwrp/graphics_drm.cpp bootable/recovery/minuitwrp/graphics_drm.cpp
+        fi
+        
+        # 如果补丁内包含自动执行脚本，则调用脚本进行应用
+        if [ -f patch_temp/patch.sh ]; then
+          echo "运行应用补丁脚本 patch.sh..."
+          bash patch_temp/patch.sh
+        elif [ -f patch_temp/apply.sh ]; then
+          echo "运行应用补丁脚本 apply.sh..."
+          bash patch_temp/apply.sh
+        elif [ -f patch_temp/install.sh ]; then
+          echo "运行应用补丁脚本 install.sh..."
+          bash patch_temp/install.sh
+        fi
+        
+        rm -rf patch_temp
+        echo "==== 展锐显示修复补丁应用完成 ===="
+      working-directory: workspace
+
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
