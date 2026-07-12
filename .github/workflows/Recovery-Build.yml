@@ -143,7 +143,18 @@ jobs:
         git clone https://github.com/rtyutechstudio/unisoc-twrp-sourcecode_patch.git patch_temp
         
         # 兼容性文件匹配与替换逻辑
-        if [ -f patch_temp/graphics_drm.cpp ]; then
+        # 1. 优先检测并复制带展锐专用后缀的文件，并重命名为 graphics_drm.cpp
+        if [ -f patch_temp/graphics_drm.cpp.sprd_legacy_kms_fixed ]; then
+          echo "检测到展锐专属补丁文件 graphics_drm.cpp.sprd_legacy_kms_fixed，正在替换为 graphics_drm.cpp ..."
+          cp -f patch_temp/graphics_drm.cpp.sprd_legacy_kms_fixed bootable/recovery/minuitwrp/graphics_drm.cpp
+        elif [ -f patch_temp/minuitwrp/graphics_drm.cpp.sprd_legacy_kms_fixed ]; then
+          echo "在子目录下检测到展锐专属补丁文件，正在替换为 graphics_drm.cpp ..."
+          cp -f patch_temp/minuitwrp/graphics_drm.cpp.sprd_legacy_kms_fixed bootable/recovery/minuitwrp/graphics_drm.cpp
+        elif [ -f patch_temp/bootable/recovery/minuitwrp/graphics_drm.cpp.sprd_legacy_kms_fixed ]; then
+          echo "在完整路径下检测到展锐专属补丁文件，正在替换为 graphics_drm.cpp ..."
+          cp -f patch_temp/bootable/recovery/minuitwrp/graphics_drm.cpp.sprd_legacy_kms_fixed bootable/recovery/minuitwrp/graphics_drm.cpp
+        # 2. 如果不存在带后缀的文件，继续匹配标准的 graphics_drm.cpp
+        elif [ -f patch_temp/graphics_drm.cpp ]; then
           echo "在根目录下找到 graphics_drm.cpp，正在替换..."
           cp -f patch_temp/graphics_drm.cpp bootable/recovery/minuitwrp/graphics_drm.cpp
         elif [ -f patch_temp/minuitwrp/graphics_drm.cpp ]; then
