@@ -122,6 +122,21 @@ jobs:
         git clone ${{ github.event.inputs.COMMON_TREE_URL }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.COMMON_PATH }}
       working-directory: ${{ steps.pwd.outputs.workspace-folder }}
 
+    - name: Configure BoardConfig for LZ4 Compression
+      run: |
+        echo "==== 开始强制配置 LZ4 压缩格式 ===="
+        BOARD_CONFIG_FILE="${{ github.event.inputs.DEVICE_PATH }}/BoardConfig.mk"
+        if [ -f "$BOARD_CONFIG_FILE" ]; then
+          # 移除可能存在的旧定义，避免重复定义冲突
+          sed -i '/BOARD_RAMDISK_USE_LZ4/d' "$BOARD_CONFIG_FILE"
+          # 追加强制开启 LZ4
+          echo "BOARD_RAMDISK_USE_LZ4 := true" >> "$BOARD_CONFIG_FILE"
+          echo "已成功在 BoardConfig.mk 追加 BOARD_RAMDISK_USE_LZ4 := true"
+        else
+          echo "警告: 未在 ${BOARD_CONFIG_FILE} 找到 BoardConfig.mk，请检查设备树路径！"
+        fi
+      working-directory: ${{ steps.pwd.outputs.workspace-folder }}
+
     - name: Apply Unisoc TWRP Source Patch
       run: |
         echo "==== 开始拉取展锐显示修复补丁 ===="
@@ -167,7 +182,7 @@ jobs:
         export ALLOW_MISSING_DEPENDENCIES=true
         (lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)) 2>&1 | tee ${{ steps.pwd.outputs.workspace-folder }}/../build.log
       working-directory: ${{ steps.pwd.outputs.workspace-folder }}
-
+      
     - name: Upload Build Log
       if: always()
       uses: actions/upload-artifact@v4
